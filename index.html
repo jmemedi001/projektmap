@@ -3,24 +3,83 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Our Site</title>
+<title>Fjolla & Une Project</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  body { font-family: Arial, sans-serif; margin:0; padding:0; background:#111; color:#eee;}
-  .tabs { display:flex; background:#222; }
-  .tab { padding:10px 20px; cursor:pointer; border-bottom:2px solid transparent;}
-  .tab.active { border-bottom:2px solid #ff6; }
-  .tab-content { display:none; padding:20px; }
+  /* ---- Global Styles ---- */
+  body {
+    font-family: 'Inter', sans-serif;
+    margin:0; padding:0;
+    background:#121212;
+    color:#eee;
+  }
+
+  /* ---- Tabs ---- */
+  .tabs { display:flex; justify-content:center; background:#1e1e1e; }
+  .tab {
+    padding:12px 25px;
+    cursor:pointer;
+    border-bottom:3px solid transparent;
+    font-weight:600;
+    transition: all 0.2s;
+  }
+  .tab:hover { background:#2a2a2a; }
+  .tab.active { border-bottom:3px solid #f1c40f; }
+
+  .tab-content { display:none; padding:20px; max-width:900px; margin:20px auto; }
   .tab-content.active { display:block; }
-  #mapContainer { width: 100%; height: 400px; border:2px solid #555; margin-bottom:10px; }
-  #sidePanel { max-height:150px; overflow-y:auto; border-top:1px solid #555; padding-top:5px; }
-  input, button { padding:5px; margin-top:5px; background:#222; border:1px solid #555; color:#eee; }
-  .glow-marker { width:12px; height:12px; background:#ff6; border-radius:50%; box-shadow:0 0 10px #ff6; }
-  hr { border-color:#555; }
-  /* Password overlay */
-  #passwordOverlay { position:fixed; top:0; left:0; width:100%; height:100%;
-    background:#111; color:#eee; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; z-index:9999; }
+
+  /* ---- Map ---- */
+  #mapContainer {
+    width:100%;
+    max-width:800px;
+    height:400px;
+    margin:0 auto 10px auto;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 4px 20px rgba(0,0,0,0.5);
+  }
+  #sidePanel {
+    max-height:150px;
+    overflow-y:auto;
+    border-top:1px solid #444;
+    padding-top:5px;
+  }
+
+  /* ---- Inputs & Buttons ---- */
+  input, button {
+    padding:8px 12px;
+    margin-top:5px;
+    background:#1e1e1e;
+    border:1px solid #444;
+    border-radius:6px;
+    color:#eee;
+    outline:none;
+    transition: all 0.2s;
+  }
+  input:focus { border-color:#f1c40f; }
+  button:hover { background:#2a2a2a; cursor:pointer; }
+
+  /* ---- Markers ---- */
+  .glow-marker {
+    width:14px; height:14px;
+    background:#f1c40f;
+    border-radius:50%;
+    box-shadow:0 0 10px #f1c40f;
+  }
+
+  hr { border-color:#444; }
+
+  /* ---- Password Overlay ---- */
+  #passwordOverlay {
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background:#121212;
+    color:#eee;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    z-index:9999;
+  }
 </style>
 
 <!-- Firebase SDK -->
@@ -41,7 +100,6 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 </script>
-
 </head>
 <body>
 
@@ -62,7 +120,7 @@
 
 <div id="mapTab" class="tab-content active">
   <div id="mapContainer"></div>
-  <div id="sidePanel"></div>
+  <div id="sidePanel">Loading archive...</div>
 </div>
 
 <div id="historyTab" class="tab-content">
@@ -71,13 +129,13 @@
 
 <div id="songTab" class="tab-content">
   <input type="text" id="songInput" placeholder="Add a song"/>
-  <button onclick="addSong()">Add Song</button>
+  <button id="addSongBtn">Add Song</button>
   <div id="songs">Loading...</div>
 </div>
 
 <script>
 // --- PASSWORD ---
-const correctPassword = "fjollabore"; // <-- change this
+const correctPassword = "music123"; // <-- change this
 function checkPassword() {
   const val = document.getElementById("sitePassword").value;
   if(val === correctPassword) {
@@ -104,17 +162,19 @@ const map = L.map('mapContainer').setView([41.9981,21.4254],6);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
   attribution:'© OpenStreetMap contributors'
 }).addTo(map);
-const icon = L.divIcon({ html:'<div class="glow-marker"></div>', iconSize:[12,12] });
+const icon = L.divIcon({ html:'<div class="glow-marker"></div>', iconSize:[14,14] });
 
 function loadPins() {
-  document.getElementById("sidePanel").innerHTML = "";
+  document.getElementById("sidePanel").innerHTML = "Loading archive...";
   db.collection("pins").orderBy("time","asc").get().then(snapshot=>{
+    document.getElementById("sidePanel").innerHTML = "";
     snapshot.forEach(doc=>{
       const pin = doc.data();
       const marker = L.marker([pin.lat,pin.lng],{icon}).addTo(map);
       marker.bindPopup(`<strong>LOG ENTRY</strong><br>${pin.text}<br/><small>${pin.time.toDate().toLocaleString()}</small>`);
       document.getElementById("sidePanel").innerHTML += `<div>${pin.text}<br/><small>${pin.time.toDate().toLocaleString()}</small><hr/></div>`;
     });
+    if(snapshot.empty) document.getElementById("sidePanel").innerText = "No pins yet.";
   });
 }
 
@@ -127,9 +187,7 @@ map.on('click', function(e){
     lng: e.latlng.lng,
     text: text,
     time: time
-  }).then(() => {
-    loadPins();
-  });
+  }).then(() => loadPins());
 });
 
 loadPins();
@@ -137,6 +195,7 @@ loadPins();
 // --- Song Log ---
 const songsContainer = document.getElementById("songs");
 const songInput = document.getElementById("songInput");
+const addSongBtn = document.getElementById("addSongBtn");
 
 function loadSongs() {
   songsContainer.innerHTML = "Loading...";
@@ -146,10 +205,11 @@ function loadSongs() {
       const song = doc.data();
       songsContainer.innerHTML += `<div>${song.text}<hr/></div>`;
     });
+    if(snapshot.empty) songsContainer.innerText = "No songs logged yet.";
   });
 }
 
-function addSong() {
+addSongBtn.addEventListener("click", function(){
   const val = songInput.value.trim();
   if(!val) return;
   const time = firebase.firestore.Timestamp.now();
@@ -157,7 +217,7 @@ function addSong() {
     songInput.value = "";
     loadSongs();
   });
-}
+});
 
 loadSongs();
 
@@ -223,6 +283,6 @@ function showFact() {
 
 showFact();
 </script>
-
 </body>
 </html>
+
