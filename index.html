@@ -3,92 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Our Site</title>
+<title>Fjolla & Une Project</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  /* ---- Global Styles ---- */
-  body {
-    font-family: 'Inter', sans-serif;
-    margin:0; padding:0;
-    background:#121212;
-    color:#eee;
-  }
-
-  /* ---- Tabs ---- */
+  body { font-family:'Inter',sans-serif; margin:0; padding:0; background:#121212; color:#eee; }
   .tabs { display:flex; justify-content:center; background:#1e1e1e; }
-  .tab {
-    padding:12px 25px;
-    cursor:pointer;
-    border-bottom:3px solid transparent;
-    font-weight:600;
-    transition: all 0.2s;
-  }
+  .tab { padding:12px 25px; cursor:pointer; border-bottom:3px solid transparent; font-weight:600; transition:0.2s; }
   .tab:hover { background:#2a2a2a; }
   .tab.active { border-bottom:3px solid #f1c40f; }
-
   .tab-content { display:none; padding:20px; max-width:900px; margin:20px auto; }
   .tab-content.active { display:block; }
-
-  /* ---- Map ---- */
-  #mapContainer {
-    width:100%;
-    max-width:800px;
-    height:400px;
-    margin:0 auto 10px auto;
-    border-radius:12px;
-    overflow:hidden;
-    box-shadow:0 4px 20px rgba(0,0,0,0.5);
-  }
-  #sidePanel {
-    max-height:150px;
-    overflow-y:auto;
-    border-top:1px solid #444;
-    padding-top:5px;
-  }
-
-  /* ---- Inputs & Buttons ---- */
-  input, button {
-    padding:8px 12px;
-    margin-top:5px;
-    background:#1e1e1e;
-    border:1px solid #444;
-    border-radius:6px;
-    color:#eee;
-    outline:none;
-    transition: all 0.2s;
-  }
+  #mapContainer { width:100%; max-width:800px; height:400px; margin:0 auto 10px; border-radius:12px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.5); }
+  #sidePanel { max-height:150px; overflow-y:auto; border-top:1px solid #444; padding-top:5px; }
+  input, button { padding:8px 12px; margin-top:5px; background:#1e1e1e; border:1px solid #444; border-radius:6px; color:#eee; outline:none; transition:0.2s; }
   input:focus { border-color:#f1c40f; }
   button:hover { background:#2a2a2a; cursor:pointer; }
-
-  /* ---- Markers ---- */
-  .glow-marker {
-    width:14px; height:14px;
-    background:#f1c40f;
-    border-radius:50%;
-    box-shadow:0 0 10px #f1c40f;
-  }
-
+  .glow-marker { width:14px; height:14px; background:#f1c40f; border-radius:50%; box-shadow:0 0 10px #f1c40f; }
   hr { border-color:#444; }
-
-  /* ---- Password Overlay ---- */
-  #passwordOverlay {
-    position:fixed; top:0; left:0; width:100%; height:100%;
-    background:#121212;
-    color:#eee;
-    display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
-    z-index:9999;
-  }
+  #passwordOverlay { position:fixed; top:0; left:0; width:100%; height:100%; background:#121212; color:#eee; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; }
 </style>
 
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-  // --- FIREBASE CONFIGURATION ---
+  // --- FIREBASE CONFIG ---
   const firebaseConfig = {
     apiKey: "AIzaSyBk7vpprHqVv1ILc4rruIiS4bSZRzkQs1Y",
     authDomain: "sdasasdasd-6eb06.firebaseapp.com",
@@ -103,7 +44,7 @@
 </head>
 <body>
 
-<!-- Password Overlay -->
+<!-- PASSWORD -->
 <div id="passwordOverlay">
   <h2>Enter Password</h2>
   <input type="password" id="sitePassword" placeholder="Password"/>
@@ -111,7 +52,7 @@
   <div id="passwordError" style="color:red; margin-top:10px;"></div>
 </div>
 
-<!-- Tabs -->
+<!-- TABS -->
 <div class="tabs">
   <div class="tab active" data-tab="mapTab">Map</div>
   <div class="tab" data-tab="historyTab">Music Facts</div>
@@ -134,154 +75,107 @@
 </div>
 
 <script>
-// --- PASSWORD ---
-const correctPassword = "fjollabore"; // <-- change this
-function checkPassword() {
-  const val = document.getElementById("sitePassword").value;
-  if(val === correctPassword) {
-    document.getElementById("passwordOverlay").style.display = "none";
-  } else {
-    document.getElementById("passwordError").innerText = "Incorrect password!";
+  // --- PASSWORD ---
+  const correctPassword = "music123";
+  function checkPassword() {
+    const val = document.getElementById("sitePassword").value;
+    if(val===correctPassword) document.getElementById("passwordOverlay").style.display="none";
+    else document.getElementById("passwordError").innerText="Incorrect password!";
   }
-}
 
-// --- Tabs ---
-const tabs = document.querySelectorAll('.tab');
-const contents = document.querySelectorAll('.tab-content');
-tabs.forEach(tab => {
-  tab.addEventListener('click', ()=>{
+  // --- TABS ---
+  const tabs=document.querySelectorAll('.tab');
+  const contents=document.querySelectorAll('.tab-content');
+  tabs.forEach(tab=>tab.addEventListener('click',()=>{
     tabs.forEach(t=>t.classList.remove('active'));
     contents.forEach(c=>c.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById(tab.dataset.tab).classList.add('active');
-  });
-});
+  }));
 
-// --- Map ---
-const map = L.map('mapContainer').setView([41.9981,21.4254],6);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
-  attribution:'© OpenStreetMap contributors'
-}).addTo(map);
-const icon = L.divIcon({ html:'<div class="glow-marker"></div>', iconSize:[14,14] });
+  // --- MAP ---
+  const map=L.map('mapContainer').setView([41.9981,21.4254],6);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{ attribution:'© OpenStreetMap contributors' }).addTo(map);
+  const icon = L.divIcon({ html:'<div class="glow-marker"></div>', iconSize:[14,14] });
 
-function loadPins() {
-  document.getElementById("sidePanel").innerHTML = "Loading archive...";
-  db.collection("pins").orderBy("time","asc").get().then(snapshot=>{
-    document.getElementById("sidePanel").innerHTML = "";
-    snapshot.forEach(doc=>{
-      const pin = doc.data();
-      const marker = L.marker([pin.lat,pin.lng],{icon}).addTo(map);
-      marker.bindPopup(`<strong>LOG ENTRY</strong><br>${pin.text}<br/><small>${pin.time.toDate().toLocaleString()}</small>`);
-      document.getElementById("sidePanel").innerHTML += `<div>${pin.text}<br/><small>${pin.time.toDate().toLocaleString()}</small><hr/></div>`;
+  function loadPins(){
+    const panel=document.getElementById("sidePanel");
+    panel.innerText="Loading archive...";
+    db.collection("pins").orderBy("time","asc").get().then(snapshot=>{
+      panel.innerHTML="";
+      snapshot.forEach(doc=>{
+        const pin=doc.data();
+        L.marker([pin.lat,pin.lng],{icon}).addTo(map).bindPopup(`<strong>LOG ENTRY</strong><br>${pin.text}<br/><small>${pin.time.toDate().toLocaleString()}</small>`);
+        panel.innerHTML+=`<div>${pin.text}<br/><small>${pin.time.toDate().toLocaleString()}</small><hr/></div>`;
+      });
+      if(snapshot.empty) panel.innerText="No pins yet.";
     });
-    if(snapshot.empty) document.getElementById("sidePanel").innerText = "No pins yet.";
+  }
+
+  map.on('click',e=>{
+    const text=prompt("LOG ENTRY (max 120 chars)");
+    if(!text) return;
+    const time=firebase.firestore.Timestamp.now();
+    db.collection("pins").add({lat:e.latlng.lat,lng:e.latlng.lng,text,text,time})
+      .then(()=>loadPins())
+      .catch(err=>alert("Error adding pin: "+err));
   });
-}
 
-map.on('click', function(e){
-  const text = prompt("LOG ENTRY (max 120 chars)");
-  if(!text) return;
-  const time = firebase.firestore.Timestamp.now();
-  db.collection("pins").add({
-    lat: e.latlng.lat,
-    lng: e.latlng.lng,
-    text: text,
-    time: time
-  }).then(() => loadPins());
-});
+  loadPins();
 
-loadPins();
+  // --- SONG LOG ---
+  const songsContainer=document.getElementById("songs");
+  const songInput=document.getElementById("songInput");
+  const addSongBtn=document.getElementById("addSongBtn");
 
-// --- Song Log ---
-const songsContainer = document.getElementById("songs");
-const songInput = document.getElementById("songInput");
-const addSongBtn = document.getElementById("addSongBtn");
-
-function loadSongs() {
-  songsContainer.innerHTML = "Loading...";
-  db.collection("songs").orderBy("time","asc").get().then(snapshot => {
-    songsContainer.innerHTML = "";
-    snapshot.forEach(doc => {
-      const song = doc.data();
-      songsContainer.innerHTML += `<div>${song.text}<hr/></div>`;
+  function loadSongs(){
+    songsContainer.innerText="Loading...";
+    db.collection("songs").orderBy("time","asc").get().then(snapshot=>{
+      songsContainer.innerHTML="";
+      snapshot.forEach(doc=>{
+        const song=doc.data();
+        songsContainer.innerHTML+=`<div>${song.text}<hr/></div>`;
+      });
+      if(snapshot.empty) songsContainer.innerText="No songs logged yet.";
     });
-    if(snapshot.empty) songsContainer.innerText = "No songs logged yet.";
+  }
+
+  addSongBtn.addEventListener("click",()=>{
+    const val=songInput.value.trim();
+    if(!val) return;
+    const time=firebase.firestore.Timestamp.now();
+    db.collection("songs").add({text:val,time}).then(()=>{
+      songInput.value="";
+      loadSongs();
+    }).catch(err=>alert("Error adding song: "+err));
   });
-}
 
-addSongBtn.addEventListener("click", function(){
-  const val = songInput.value.trim();
-  if(!val) return;
-  const time = firebase.firestore.Timestamp.now();
-  db.collection("songs").add({text: val, time: time}).then(()=>{
-    songInput.value = "";
-    loadSongs();
-  });
-});
+  loadSongs();
 
-loadSongs();
+  // --- MUSIC FACTS ---
+  const facts=[
+    "Beethoven composed some of his best works while completely deaf.",
+    "Mozart started composing at age 5.",
+    "Vivaldi was nicknamed 'The Red Priest'.",
+    "Johann Sebastian Bach had 20 children.",
+    "Frederic Chopin wrote mostly for solo piano.",
+    "Louis Armstrong popularized scat singing.",
+    "The Beatles hold the record for most number-one hits in the UK.",
+    "Opera originated in Italy at the end of the 16th century.",
+    "Antonio Stradivari crafted some of the world's finest violins.",
+    "Handel wrote 'Messiah' in just 24 days.",
+    "Jazz originated in New Orleans in the late 19th century.",
+    "Beethoven’s Ninth Symphony includes a choral finale.",
+    "Tchaikovsky wrote the Nutcracker ballet."
+  ];
 
-// --- Music Facts ---
-const facts = [
-"Beethoven composed some of his best works while completely deaf.",
-"Mozart started composing at age 5.",
-"Vivaldi was nicknamed 'The Red Priest'.",
-"Johann Sebastian Bach had 20 children.",
-"Frederic Chopin wrote mostly for solo piano.",
-"Louis Armstrong popularized scat singing.",
-"The Beatles hold the record for most number-one hits in the UK.",
-"Opera originated in Italy at the end of the 16th century.",
-"Antonio Stradivari crafted some of the world's finest violins.",
-"Handel wrote 'Messiah' in just 24 days.",
-"Jazz originated in New Orleans in the late 19th century.",
-"Beethoven’s Ninth Symphony includes a choral finale.",
-"Tchaikovsky wrote the Nutcracker ballet.",
-"Michael Jackson’s 'Thriller' is the best-selling album of all time.",
-"Elvis Presley is known as the 'King of Rock and Roll'.",
-"Debussy was inspired by Impressionist painters.",
-"Mendelssohn revived interest in Bach’s music.",
-"Rachmaninoff was also a famous pianist.",
-"Puccini wrote La Bohème and Tosca.",
-"Schubert composed over 600 songs.",
-"Miles Davis pioneered modal jazz.",
-"John Cage composed music using chance operations.",
-"Liszt was a virtuosic piano performer.",
-"Rimsky-Korsakov wrote Scheherazade.",
-"Verdi composed 28 operas.",
-"Mahler expanded the size of orchestras.",
-"Stravinsky’s 'Rite of Spring' caused a riot at its premiere.",
-"Ellington led a big band for over 50 years.",
-"Bartók collected folk music from Eastern Europe.",
-"Glenn Gould was famous for Bach interpretations.",
-"Shostakovich wrote 15 symphonies.",
-"Orff created 'Carmina Burana'.",
-"Caruso was one of the first recording stars.",
-"Gil Evans collaborated with Miles Davis.",
-"Carter composed complex modern music.",
-"Adams is a leading minimalist composer.",
-"Copland captured the American sound.",
-"Haydn is called the 'Father of the Symphony'.",
-"Handel’s water music was performed on a barge.",
-"Pergolesi wrote Stabat Mater.",
-"Ravel composed Boléro.",
-"Gershwin fused jazz and classical.",
-"Schumann’s Dichterliebe is a song cycle.",
-"Saint-Saëns wrote Carnival of the Animals.",
-"Verklärte Nacht by Schönberg is a late-Romantic work.",
-"Barber composed Adagio for Strings.",
-"Fauré wrote Requiem.",
-"Monteverdi pioneered opera.",
-"Telemann was extremely prolific.",
-"Biber wrote colorful violin sonatas."
-];
+  function showFact(){
+    const today=new Date();
+    const index=today.getDate()%facts.length;
+    document.getElementById("musicFact").innerText=facts[index];
+  }
 
-function showFact() {
-  const today = new Date();
-  const index = today.getDate() % facts.length;
-  document.getElementById("musicFact").innerText = facts[index];
-}
-
-showFact();
+  showFact();
 </script>
 </body>
 </html>
