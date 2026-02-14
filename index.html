@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PROJECT NOCTURNE</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<title>Our site</title>
 <style>
 body { margin:0; font-family:"Courier New", monospace; background:#000; color:#d0d0d0; }
 #loader { position:fixed; top:0; left:0; width:100%; height:100%; background:#000; display:flex; flex-direction:column; justify-content:center; align-items:center; font-size:20px; z-index:2000; }
@@ -18,22 +17,18 @@ header div { cursor:pointer; padding:5px 15px; border-radius:5px; }
 header div.active { background:#222; color:#00ff88; }
 #content { width:100%; height:calc(100vh - 50px); opacity:0; transition:1s; }
 #map, #todayHistory, #songLog { display:none; height:100%; padding:10px; overflow-y:auto; }
-.glow-marker { background:red; width:10px; height:10px; border-radius:50%; box-shadow:0 0 8px red,0 0 16px red; animation:pulse 2s infinite; }
-@keyframes pulse { 0%,100%{box-shadow:0 0 8px red,0 0 16px red} 50%{box-shadow:0 0 14px red,0 0 28px red} }
 #sidePanel { position:absolute; right:-320px; top:0; width:300px; height:100%; background:#0a0a0a; border-left:1px solid #111; overflow-y:auto; padding:10px; transition:0.3s; z-index:1000; }
 #sidePanel.active { right:0; }
 .toggleBtn { position:absolute; right:20px; top:60px; font-size:12px; cursor:pointer; opacity:0.6; z-index:1000; }
-button { background:#222; color:#fff; border:none; padding:5px 10px; cursor:pointer; margin-top:5px; }
 input, textarea { width:100%; padding:5px; margin-top:5px; background:#111; border:1px solid #333; color:#fff; font-family:inherit; }
+button { background:#222; color:#fff; border:none; padding:5px 10px; cursor:pointer; margin-top:5px; }
 hr { border-color:#222; }
 </style>
 </head>
 <body>
 
-<!-- Loader screen -->
 <div id="loader">ACCESSING ARCHIVE...</div>
 
-<!-- Password gate -->
 <div id="passwordScreen">
   <div>Enter Access Code</div>
   <input type="password" id="passInput" placeholder="Code...">
@@ -41,23 +36,23 @@ hr { border-color:#222; }
   <div id="passError" style="color:red;margin-top:5px;display:none;">Wrong code</div>
 </div>
 
-<!-- Tabs -->
 <header>
   <div id="tabMap" class="active" onclick="switchTab('map')">Map</div>
   <div id="tabHistory" onclick="switchTab('history')">Today in Music History</div>
-  <div id="tabSong" onclick="switchTab('song')">Song Log</div>
+  <div id="tabSong" onclick="switchTab('song')">Spotify Search</div>
 </header>
 
 <div id="content">
   <div id="map"></div>
+
   <div id="todayHistory">
     <h3>Music Fact of the Day</h3>
     <p id="fact">Loading...</p>
   </div>
+
   <div id="songLog">
-    <h3>Song Log</h3>
-    <textarea id="songInput" placeholder="Type a song..."></textarea>
-    <button onclick="addSong()">Add Song</button>
+    <h3>Spotify Search</h3>
+    <input type="text" id="songInput" placeholder="Type song/artist..." oninput="searchSpotify()">
     <div id="songs"></div>
   </div>
 </div>
@@ -69,105 +64,97 @@ hr { border-color:#222; }
   <source src="https://cdn.pixabay.com/download/audio/2022/08/04/audio_8d7502f3c3.mp3?filename=dark-ambient-11513.mp3" type="audio/mpeg">
 </audio>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Google Maps JS API -->
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+
 <script>
-  // --- Password Gate ---
-  const SECRET = "nocturne123";
-  function checkPassword(){
-    const val = document.getElementById("passInput").value;
-    if(val === SECRET){
-      document.getElementById("passwordScreen").style.display='none';
-      startApp();
-    } else {
-      document.getElementById("passError").style.display='block';
-    }
+// Password Gate
+const SECRET="fjollabore";
+function checkPassword(){
+  const val=document.getElementById("passInput").value;
+  if(val===SECRET){
+    document.getElementById("passwordScreen").style.display='none';
+    startApp();
+  } else {
+    document.getElementById("passError").style.display='block';
+  }
+}
+
+// App
+function startApp(){
+  setTimeout(()=>{document.querySelector('header').style.opacity=1; document.getElementById('content').style.opacity=1;},500);
+  setTimeout(()=>{document.getElementById("loader").classList.add('fade-out');},2000);
+
+  // Tabs
+  function switchTab(tab){
+    document.getElementById('tabMap').classList.remove('active');
+    document.getElementById('tabHistory').classList.remove('active');
+    document.getElementById('tabSong').classList.remove('active');
+    document.getElementById('tabMap').classList.toggle('active',tab==='map');
+    document.getElementById('tabHistory').classList.toggle('active',tab==='history');
+    document.getElementById('tabSong').classList.toggle('active',tab==='song');
+    document.getElementById('map').style.display=(tab==='map')?'block':'none';
+    document.getElementById('todayHistory').style.display=(tab==='history')?'block':'none';
+    document.getElementById('songLog').style.display=(tab==='song')?'block':'none';
+  }
+  window.switchTab=switchTab;
+
+  // Archive side panel
+  window.togglePanel=()=>{document.getElementById("sidePanel").classList.toggle("active");}
+
+  // Music Facts - Wikipedia On This Day
+  fetch('https://en.wikipedia.org/api/rest_v1/feed/onthisday/events/'+(new Date().getMonth()+1)+'/'+new Date().getDate())
+  .then(res=>res.json())
+  .then(data=>{
+    const musicFacts=data.events.filter(e=>e.text.toLowerCase().includes("music") || e.text.toLowerCase().includes("song") || e.text.toLowerCase().includes("band") || e.text.toLowerCase().includes("album") || e.text.toLowerCase().includes("composer") || e.text.toLowerCase().includes("opera"));
+    document.getElementById("fact").innerText = musicFacts.length>0 ? musicFacts[0].text : "No significant music event recorded today.";
+  })
+  .catch(()=>{document.getElementById("fact").innerText="Unable to load music history today."});
+
+  // Spotify search
+  window.searchSpotify=()=>{
+    const query=document.getElementById("songInput").value.trim();
+    const container=document.getElementById("songs");
+    container.innerHTML='';
+    if(!query) return;
+    const encoded=encodeURIComponent(query);
+    const url=`https://open.spotify.com/search/${encoded}`;
+    container.innerHTML=`<div>Search Spotify for "<strong>${query}</strong>": <a href="${url}" target="_blank" style="color:#00ff88;">Click Here</a></div>`;
   }
 
-  function startApp(){
-    // Fade in header/content after loader
-    setTimeout(()=>{
-      document.querySelector('header').style.opacity=1;
-      document.getElementById('content').style.opacity=1;
-    }, 500);
+  // --- Google Map with clickable markers ---
+  const logs = JSON.parse(localStorage.getItem("nocturneLogs")||"[]");
+  const map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 41.9981, lng: 21.4254 },
+    zoom: 6,
+    styles: [{elementType:'geometry',stylers:[{color:'#0a0a0a'}]}]
+  });
 
-    // Auto fade-out loader after 2 seconds
-    setTimeout(() => {document.getElementById("loader").classList.add('fade-out');}, 2000);
-
-    // --- Tab system ---
-    function switchTab(tab){
-      document.getElementById('tabMap').classList.remove('active');
-      document.getElementById('tabHistory').classList.remove('active');
-      document.getElementById('tabSong').classList.remove('active');
-      document.getElementById('tabMap').classList.toggle('active', tab==='map');
-      document.getElementById('tabHistory').classList.toggle('active', tab==='history');
-      document.getElementById('tabSong').classList.toggle('active', tab==='song');
-      document.getElementById('map').style.display = (tab==='map') ? 'block' : 'none';
-      document.getElementById('todayHistory').style.display = (tab==='history') ? 'block' : 'none';
-      document.getElementById('songLog').style.display = (tab==='song') ? 'block' : 'none';
-    }
-    window.switchTab = switchTab;
-
-    // --- Map Tab ---
-    let logs = JSON.parse(localStorage.getItem("nocturneLogs")) || [];
-    const map = L.map('map').setView([41.9981,21.4254],6);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{ attribution:'© OpenStreetMap contributors' }).addTo(map);
-    const icon = L.divIcon({ html:'<div class="glow-marker"></div>', iconSize:[10,10] });
-    logs.forEach(log => { createLog(log.lat, log.lng, log.text, log.time); });
-    map.on('click', function(e){
-      const text = prompt("LOG ENTRY (max 120 chars)");
-      if(!text) return;
-      const time = new Date().toLocaleString();
-      const log = { lat:e.latlng.lat, lng:e.latlng.lng, text, time };
-      logs.push(log);
-      localStorage.setItem("nocturneLogs", JSON.stringify(logs));
-      createLog(e.latlng.lat,e.latlng.lng,text,time);
-    });
-    function createLog(lat,lng,text,time){
-      const marker = L.marker([lat,lng],{icon}).addTo(map);
-      marker.bindPopup(`<strong>LOG ENTRY</strong><br>${text}<br/><small>${time}</small>`);
-      const panel = document.getElementById("sidePanel");
-      panel.innerHTML += `<div>${text}<br/><small>${time}</small><hr/></div>`;
-    }
-    window.togglePanel = ()=>{document.getElementById("sidePanel").classList.toggle("active");}
-
-    // --- Today in Music History Tab ---
-    fetch('https://api.dayinhistory.dev/v1/today/events/')
-      .then(res => res.json())
-      .then(events => {
-        const musicEvents = events.filter(e =>
-          /music|song|album|band|concert|composer|opera/i.test(e.text)
-        );
-        document.getElementById('fact').innerText =
-          musicEvents.length > 0 ? musicEvents[0].text :
-          "No significant music event recorded for today.";
-      })
-      .catch(() => {
-        document.getElementById('fact').innerText =
-          "Unable to load music history today.";
-      });
-
-    // --- Song Log Tab ---
-    let songs = JSON.parse(localStorage.getItem("nocturneSongs")) || [];
-    function renderSongs(){
-      const container = document.getElementById("songs");
-      container.innerHTML = '';
-      songs.forEach(s => container.innerHTML += `<div>${s}<hr/></div>`);
-    }
-    window.addSong = ()=>{
-      const val = document.getElementById("songInput").value.trim();
-      if(!val) return;
-      songs.push(val);
-      localStorage.setItem("nocturneSongs", JSON.stringify(songs));
-      document.getElementById("songInput").value='';
-      renderSongs();
-    }
-    renderSongs();
-
-    // --- Default tab ---
-    switchTab('map');
+  function addMarker(lat,lng,text,time){
+    const marker = new google.maps.Marker({position:{lat,lng},map});
+    const infowindow = new google.maps.InfoWindow({content:`<strong>LOG ENTRY</strong><br>${text}<br><small>${time}</small>`});
+    marker.addListener('click',()=>infowindow.open(map,marker));
+    const panel = document.getElementById("sidePanel");
+    panel.innerHTML+=`<div>${text}<br/><small>${time}</small><hr/></div>`;
   }
+
+  logs.forEach(l=>addMarker(l.lat,lng=l.lng,l.text,l.time));
+
+  map.addListener('click', function(e){
+    const text = prompt("LOG ENTRY (max 120 chars)");
+    if(!text) return;
+    const time = new Date().toLocaleString();
+    const log = {lat:e.latLng.lat(), lng:e.latLng.lng(), text, time};
+    logs.push(log);
+    localStorage.setItem("nocturneLogs", JSON.stringify(logs));
+    addMarker(log.lat,log.lng,log.text,log.time);
+  });
+
+  // Default tab
+  switchTab('map');
+}
 </script>
+
 </body>
 </html>
-
 
