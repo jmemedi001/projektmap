@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>our website</title>
+<title>PROJECT NOCTURNE</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
   body { margin:0; font-family:"Courier New", monospace; background:#000; color:#d0d0d0; overflow:hidden; }
@@ -51,7 +51,7 @@
 <div id="content">
   <div id="map"></div>
   <div id="todayHistory">
-    <h3>Fact of the Day</h3>
+    <h3>Music Fact of the Day</h3>
     <p id="fact">Loading...</p>
   </div>
   <div id="songLog">
@@ -72,7 +72,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
   // --- Password Gate ---
-  const SECRET = "nocturne123"; // change this to your code
+  const SECRET = "nocturne123"; // change your code here
   function checkPassword(){
     const val = document.getElementById("passInput").value;
     if(val === SECRET){
@@ -84,7 +84,6 @@
   }
 
   function startApp(){
-    // Fade in header/content
     setTimeout(()=>{document.querySelector('header').style.opacity=1; document.getElementById('content').style.opacity=1;}, 500);
     document.getElementById("loader").classList.add('fade-out');
 
@@ -126,15 +125,20 @@
     window.togglePanel = ()=>{document.getElementById("sidePanel").classList.toggle("active");}
 
     // --- Today in Music History Tab ---
-    const musicFacts = [
-      "Feb 14, 1916: Composer George Gershwin performed a piano recital in New York.",
-      "Feb 14, 1959: Billboard ranked 'Rock Around the Clock' at #1 in jazz charts.",
-      "Feb 14, 1973: Pink Floyd released 'Dark Side of the Moon' demo version.",
-      "Feb 14, 1986: A-ha performed 'Take On Me' live for the first time on TV.",
-      "Feb 14, 1991: Whitney Houston's 'I Will Always Love You' hit #1."
-    ];
-    const todayIndex = new Date().getDate() % musicFacts.length;
-    document.getElementById('fact').innerText = musicFacts[todayIndex];
+    fetch('https://api.dayinhistory.dev/v1/today/events/')
+      .then(res => res.json())
+      .then(events => {
+        const musicEvents = events.filter(e =>
+          /music|song|album|band|concert|composer|opera/i.test(e.text)
+        );
+        document.getElementById('fact').innerText =
+          musicEvents.length > 0 ? musicEvents[0].text :
+          "No significant music event recorded for today.";
+      })
+      .catch(() => {
+        document.getElementById('fact').innerText =
+          "Unable to load music history today.";
+      });
 
     // --- Song Log Tab ---
     let songs = JSON.parse(localStorage.getItem("nocturneSongs")) || [];
@@ -159,3 +163,4 @@
 </script>
 </body>
 </html>
+
