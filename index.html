@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Our Site</title>
+<title>PROJECT NOCTURNE</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 body { margin:0; font-family:"Courier New", monospace; background:#000; color:#d0d0d0; }
@@ -16,12 +16,13 @@ body { margin:0; font-family:"Courier New", monospace; background:#000; color:#d
 header { display:flex; justify-content:space-around; background:#111; padding:10px 0; opacity:0; transition:1s; }
 header div { cursor:pointer; padding:5px 15px; border-radius:5px; }
 header div.active { background:#222; color:#00ff88; }
-#content { width:100%; height:calc(100vh - 50px); opacity:0; transition:1s; }
-#map, #todayHistory, #songLog { display:none; height:100%; padding:10px; overflow-y:auto; }
+#content { width:100%; min-height:100vh; opacity:0; transition:1s; padding-bottom:50px; }
+#mapContainer { width:80%; max-width:800px; height:500px; margin:20px auto; border:2px solid #333; border-radius:8px; overflow:hidden; }
+#todayHistory, #songLog { display:none; width:80%; max-width:800px; margin:20px auto; padding:10px; border:2px solid #333; border-radius:8px; background:#111; }
 #sidePanel { position:absolute; right:-320px; top:0; width:300px; height:100%; background:#0a0a0a; border-left:1px solid #111; overflow-y:auto; padding:10px; transition:0.3s; z-index:1000; }
 #sidePanel.active { right:0; }
 .toggleBtn { position:absolute; right:20px; top:60px; font-size:12px; cursor:pointer; opacity:0.6; z-index:1000; }
-input, textarea { width:100%; padding:5px; margin-top:5px; background:#111; border:1px solid #333; color:#fff; font-family:inherit; }
+textarea { width:100%; padding:5px; margin-top:5px; background:#111; border:1px solid #333; color:#fff; font-family:inherit; }
 button { background:#222; color:#fff; border:none; padding:5px 10px; cursor:pointer; margin-top:5px; }
 hr { border-color:#222; }
 .glow-marker { background:red; width:10px; height:10px; border-radius:50%; box-shadow:0 0 8px red,0 0 16px red; animation:pulse 2s infinite; }
@@ -46,7 +47,7 @@ hr { border-color:#222; }
 </header>
 
 <div id="content">
-  <div id="map"></div>
+  <div id="mapContainer"></div>
 
   <div id="todayHistory">
     <h3>Music Fact of the Day</h3>
@@ -71,7 +72,7 @@ hr { border-color:#222; }
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // Password
-const SECRET="fjollabore";
+const SECRET="nocturne123";
 function checkPassword(){
   const val=document.getElementById("passInput").value;
   if(val===SECRET){
@@ -93,7 +94,7 @@ function startApp(){
     document.getElementById('tabMap').classList.toggle('active',tab==='map');
     document.getElementById('tabHistory').classList.toggle('active',tab==='history');
     document.getElementById('tabSong').classList.toggle('active',tab==='song');
-    document.getElementById('map').style.display=(tab==='map')?'block':'none';
+    document.getElementById('mapContainer').style.display=(tab==='map')?'block':'none';
     document.getElementById('todayHistory').style.display=(tab==='history')?'block':'none';
     document.getElementById('songLog').style.display=(tab==='song')?'block':'none';
   }
@@ -102,78 +103,76 @@ function startApp(){
   // Archive side panel
   window.togglePanel=()=>{document.getElementById("sidePanel").classList.toggle("active");}
 
-  // --- Music Facts (embedded) ---
- const musicFacts = [
-  "Ludwig van Beethoven began losing his hearing in his late 20s.",
-  "Mozart wrote over 600 works, including symphonies, operas, and chamber music.",
-  "The Beatles hold the record for most number one hits on the UK Singles Chart.",
-  "Freddie Mercury wrote 'Bohemian Rhapsody' over three weeks.",
-  "Johann Sebastian Bach composed the Brandenburg Concertos between 1711 and 1720.",
-  "The first public performance of a piano took place in 1709.",
-  "Elvis Presley is often called the 'King of Rock and Roll'.",
-  "Michael Jackson's 'Thriller' is the best-selling album of all time.",
-  "The violin is one of the oldest instruments still in common use today.",
-  "Opera originated in Italy at the end of the 16th century.",
-
-  // 50 more facts
-  "Prince was a multi-instrumentalist and could play over 20 instruments.",
-  "Madonna holds the record for the best-selling female recording artist of all time.",
-  "The first recording of sound was made by Thomas Edison in 1877.",
-  "Billie Holiday was only 15 years old when she started performing professionally.",
-  "The electric guitar was invented in the 1930s to amplify sound for big bands.",
-  "Bob Dylan won the Nobel Prize in Literature in 2016 for his songwriting.",
-  "Jimi Hendrix played a left-handed guitar upside down and backwards.",
-  "Pink Floyd's 'The Dark Side of the Moon' stayed on the Billboard charts for 741 weeks.",
-  "Louis Armstrong was nicknamed 'Satchmo' or 'Pops'.",
-  "The term 'rock and roll' was popularized by DJ Alan Freed in the 1950s.",
-  "Stevie Wonder was a child prodigy signed by Motown at age 11.",
-  "The gramophone was patented by Emile Berliner in 1887.",
-  "The first music video played on MTV was 'Video Killed the Radio Star' by The Buggles.",
-  "Whitney Houston's voice spanned three octaves.",
-  "The song 'Happy Birthday' was composed in 1893 by Patty Hill and Mildred J. Hill.",
-  "The Beatles hold the record for the most albums sold worldwide.",
-  "Aretha Franklin was the first woman inducted into the Rock and Roll Hall of Fame in 1987.",
-  "The piano has 88 keys, 52 white and 36 black.",
-  "David Bowie created the persona 'Ziggy Stardust' in 1972.",
-  "The first jazz recording was made by the Original Dixieland Jazz Band in 1917.",
-  "The harpsichord was popular during the Baroque period but fell out of use by 1750.",
-  "Ray Charles pioneered the genre of soul music in the 1950s.",
-  "The clarinet is a single-reed woodwind instrument used in classical and jazz music.",
-  "Bach's 'The Well-Tempered Clavier' consists of 48 preludes and fugues.",
-  "The theremin is one of the earliest electronic instruments, played without touch.",
-  "The drum kit evolved from marching band drums to a jazz ensemble setup.",
-  "Ravi Shankar popularized the sitar in Western music.",
-  "Maria Callas was a renowned Greek-American opera singer in the 20th century.",
-  "The song 'Imagine' by John Lennon was released in 1971.",
-  "The first stereo recordings appeared in the 1950s.",
-  "Antonio Vivaldi composed 'The Four Seasons' in 1723.",
-  "The saxophone was invented by Adolphe Sax in 1846.",
-  "Tchaikovsky composed the '1812 Overture' in 1880.",
-  "The accordion is often associated with folk music in Europe.",
-  "The Beatles stopped touring in 1966 to focus on studio recordings.",
-  "Duke Ellington composed over 1,000 pieces of music during his career.",
-  "Gustav Mahler was known for composing extremely long symphonies.",
-  "The electric bass guitar was developed in the 1930s by Paul Tutmarc.",
-  "Billie Eilish became the youngest artist to win all four major Grammys in 2020.",
-  "The first known musical notation dates back to ancient Mesopotamia.",
-  "Country music originated in the Southern United States in the early 20th century.",
-  "The first opera is often considered to be 'Dafne' by Jacopo Peri (1598).",
-  "Stevie Nicks was a member of Fleetwood Mac and also had a solo career.",
-  "The Hammond organ was widely used in jazz, gospel, and rock music.",
-  "The first gramophone records were made of shellac, not vinyl.",
-  "The band Queen performed at Live Aid in 1985, a legendary performance.",
-  "The bassoon is a double-reed woodwind instrument.",
-  "Miles Davis helped develop the style of cool jazz in the 1950s.",
-  "The first music festival in the U.S. was the Newport Jazz Festival in 1954.",
-  "Antonio Stradivari crafted violins in Cremona, Italy, that are highly prized today.",
-  "The genre of hip hop emerged in the Bronx in the 1970s.",
-  "The flute is one of the oldest musical instruments, dating back thousands of years.",
-  "Bob Marley helped bring reggae music to international attention.",
-  "The first known music printing press was developed in 1501 by Ottaviano Petrucci.",
-  "The piano was invented by Bartolomeo Cristofori around 1700.",
-  "The song 'Bohemian Rhapsody' by Queen was released in 1975."
-
+  // --- Music Facts (60 facts embedded) ---
+  const musicFacts = [
+    "Ludwig van Beethoven began losing his hearing in his late 20s.",
+    "Mozart wrote over 600 works, including symphonies, operas, and chamber music.",
+    "The Beatles hold the record for most number one hits on the UK Singles Chart.",
+    "Freddie Mercury wrote 'Bohemian Rhapsody' over three weeks.",
+    "Johann Sebastian Bach composed the Brandenburg Concertos between 1711 and 1720.",
+    "The first public performance of a piano took place in 1709.",
+    "Elvis Presley is often called the 'King of Rock and Roll'.",
+    "Michael Jackson's 'Thriller' is the best-selling album of all time.",
+    "The violin is one of the oldest instruments still in common use today.",
+    "Opera originated in Italy at the end of the 16th century.",
+    "Prince was a multi-instrumentalist and could play over 20 instruments.",
+    "Madonna holds the record for the best-selling female recording artist of all time.",
+    "The first recording of sound was made by Thomas Edison in 1877.",
+    "Billie Holiday was only 15 years old when she started performing professionally.",
+    "The electric guitar was invented in the 1930s to amplify sound for big bands.",
+    "Bob Dylan won the Nobel Prize in Literature in 2016 for his songwriting.",
+    "Jimi Hendrix played a left-handed guitar upside down and backwards.",
+    "Pink Floyd's 'The Dark Side of the Moon' stayed on the Billboard charts for 741 weeks.",
+    "Louis Armstrong was nicknamed 'Satchmo' or 'Pops'.",
+    "The term 'rock and roll' was popularized by DJ Alan Freed in the 1950s.",
+    "Stevie Wonder was a child prodigy signed by Motown at age 11.",
+    "The gramophone was patented by Emile Berliner in 1887.",
+    "The first music video played on MTV was 'Video Killed the Radio Star' by The Buggles.",
+    "Whitney Houston's voice spanned three octaves.",
+    "The song 'Happy Birthday' was composed in 1893 by Patty Hill and Mildred J. Hill.",
+    "The Beatles hold the record for the most albums sold worldwide.",
+    "Aretha Franklin was the first woman inducted into the Rock and Roll Hall of Fame in 1987.",
+    "The piano has 88 keys, 52 white and 36 black.",
+    "David Bowie created the persona 'Ziggy Stardust' in 1972.",
+    "The first jazz recording was made by the Original Dixieland Jazz Band in 1917.",
+    "The harpsichord was popular during the Baroque period but fell out of use by 1750.",
+    "Ray Charles pioneered the genre of soul music in the 1950s.",
+    "The clarinet is a single-reed woodwind instrument used in classical and jazz music.",
+    "Bach's 'The Well-Tempered Clavier' consists of 48 preludes and fugues.",
+    "The theremin is one of the earliest electronic instruments, played without touch.",
+    "The drum kit evolved from marching band drums to a jazz ensemble setup.",
+    "Ravi Shankar popularized the sitar in Western music.",
+    "Maria Callas was a renowned Greek-American opera singer in the 20th century.",
+    "The song 'Imagine' by John Lennon was released in 1971.",
+    "The first stereo recordings appeared in the 1950s.",
+    "Antonio Vivaldi composed 'The Four Seasons' in 1723.",
+    "The saxophone was invented by Adolphe Sax in 1846.",
+    "Tchaikovsky composed the '1812 Overture' in 1880.",
+    "The accordion is often associated with folk music in Europe.",
+    "The Beatles stopped touring in 1966 to focus on studio recordings.",
+    "Duke Ellington composed over 1,000 pieces of music during his career.",
+    "Gustav Mahler was known for composing extremely long symphonies.",
+    "The electric bass guitar was developed in the 1930s by Paul Tutmarc.",
+    "Billie Eilish became the youngest artist to win all four major Grammys in 2020.",
+    "The first known musical notation dates back to ancient Mesopotamia.",
+    "Country music originated in the Southern United States in the early 20th century.",
+    "The first opera is often considered to be 'Dafne' by Jacopo Peri (1598).",
+    "Stevie Nicks was a member of Fleetwood Mac and also had a solo career.",
+    "The Hammond organ was widely used in jazz, gospel, and rock music.",
+    "The first gramophone records were made of shellac, not vinyl.",
+    "The band Queen performed at Live Aid in 1985, a legendary performance.",
+    "The bassoon is a double-reed woodwind instrument.",
+    "Miles Davis helped develop the style of cool jazz in the 1950s.",
+    "The first music festival in the U.S. was the Newport Jazz Festival in 1954.",
+    "Antonio Stradivari crafted violins in Cremona, Italy, that are highly prized today.",
+    "The genre of hip hop emerged in the Bronx in the 1970s.",
+    "The flute is one of the oldest musical instruments, dating back thousands of years.",
+    "Bob Marley helped bring reggae music to international attention.",
+    "The first known music printing press was developed in 1501 by Ottaviano Petrucci.",
+    "The piano was invented by Bartolomeo Cristofori around 1700.",
+    "The song 'Bohemian Rhapsody' by Queen was released in 1975."
   ];
+
   const today = new Date();
   const factIndex = today.getDate() % musicFacts.length;
   document.getElementById("fact").innerText = musicFacts[factIndex];
@@ -196,20 +195,24 @@ function startApp(){
   renderSongs();
 
   // --- Map ---
-  const logs = JSON.parse(localStorage.getItem("nocturneLogs")||"[]");
-  const map = L.map('map').setView([41.9981,21.4254],6);
+  const mapLogs = JSON.parse(localStorage.getItem("nocturneLogs")||"[]");
+  const map = L.map('mapContainer').setView([41.9981,21.4254],6);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
     attribution:'© OpenStreetMap contributors'
   }).addTo(map);
   const icon = L.divIcon({ html:'<div class="glow-marker"></div>', iconSize:[10,10] });
-  logs.forEach(l=>{ const marker = L.marker([l.lat,l.lng],{icon}).addTo(map); marker.bindPopup(`<strong>LOG ENTRY</strong><br>${l.text}<br/><small>${l.time}</small>`); document.getElementById("sidePanel").innerHTML+=`<div>${l.text}<br/><small>${l.time}</small><hr/></div>`; });
+  mapLogs.forEach(l=>{
+    const marker = L.marker([l.lat,l.lng],{icon}).addTo(map);
+    marker.bindPopup(`<strong>LOG ENTRY</strong><br>${l.text}<br/><small>${l.time}</small>`);
+    document.getElementById("sidePanel").innerHTML+=`<div>${l.text}<br/><small>${l.time}</small><hr/></div>`;
+  });
   map.on('click', function(e){
     const text = prompt("LOG ENTRY (max 120 chars)");
     if(!text) return;
     const time = new Date().toLocaleString();
     const log = { lat:e.latlng.lat, lng:e.latlng.lng, text, time };
-    logs.push(log);
-    localStorage.setItem("nocturneLogs", JSON.stringify(logs));
+    mapLogs.push(log);
+    localStorage.setItem("nocturneLogs", JSON.stringify(mapLogs));
     const marker = L.marker([log.lat,log.lng],{icon}).addTo(map);
     marker.bindPopup(`<strong>LOG ENTRY</strong><br>${text}<br/><small>${time}</small>`);
     document.getElementById("sidePanel").innerHTML+=`<div>${text}<br/><small>${time}</small><hr/></div>`;
